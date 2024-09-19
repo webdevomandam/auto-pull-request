@@ -9,7 +9,37 @@ jobs:
   create_pull_request:
     runs-on: ubuntu-latest
     steps:
-      - name: Create pull request
-        run: gh pr create -B base_branch -H branch_to_merge --title 'Merge branch_to_merge into base_branch' --body 'Created by Github action'
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git fetch origin main
+          CHANGES=$(git log --oneline origin/main..HEAD)
+          if [ -n "$CHANGES" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="auto-pr-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH_NAME
+          git push -u origin $BRANCH_NAME
+          gh pr create --title "Automated PR from main" --body "This is an automated pull request created from changes in the main branch." --base main --head $BRANCH_NAME
