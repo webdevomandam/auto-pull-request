@@ -6,36 +6,9 @@ on:
       - main
 
 jobs:
-  create_pr:
+  create-pr-to-beta:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Setup GitHub CLI
-        uses: cli/cli@v2
-
-      - name: Check for new commits
-        id: check_commits
-        run: |
-          git fetch origin beta
-          NEW_COMMITS=$(git log beta..main --oneline)
-          if [ -n "$NEW_COMMITS" ]; then
-            echo "new_commits=true" >> $GITHUB_OUTPUT
-          else
-            echo "new_commits=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Pull Request
-        if: steps.check_commits.outputs.new_commits == 'true'
+      - run: gh pr create --base beta --head main --title "Update beta branch with latest changes from main" --body "This PR includes the latest changes from the main branch."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_EXISTS=$(gh pr list --base beta --head main --json number --jq length)
-          if [ "$PR_EXISTS" -eq "0" ]; then
-            gh pr create --base beta --head main --title "Update beta branch with latest changes from main" --body "This PR includes the latest changes from the main branch."
-          else
-            echo "A pull request from main to beta already exists. Skipping PR creation."
-          fi
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
