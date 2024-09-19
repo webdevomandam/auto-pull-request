@@ -19,7 +19,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: beta
-          base: beta
+          base: main
           title: 'Update beta branch with latest changes from main'
           body: |
             This PR is automatically created to merge the latest changes from the main branch into the beta branch.
