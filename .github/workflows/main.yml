@@ -1,13 +1,14 @@
-name: Comment when opened
+name: Create PR for new commits
+
 on:
-  issues:
-    types:
-      - opened
+  push:
+    branches:
+      - main
+
 jobs:
   comment:
     runs-on: ubuntu-latest
     steps:
-      - run: gh issue comment $ISSUE --body "Thank you for opening this issue!"
+      - run: gh pr create --base beta --head main --title "TITLE" --body "BODY"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE: ${{ github.event.issue.html_url }}
