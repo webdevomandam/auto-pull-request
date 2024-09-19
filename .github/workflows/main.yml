@@ -1,16 +1,21 @@
-name: Create Pull Request
+name: Create Pull Request on New Commits
+
 on:
   push:
-    branches: main
+    branches:
+      - main
+
 jobs:
-  build:
+  create-pull-request:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Create Pull Request
         uses: actions/create-pull-request@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "New Commits in Main"
+          body: "This pull request automatically created to merge the latest changes from main branch into the target branch."
           head: main
-          base: beta
-          title: Your Pull Request Title
-          body: Your Pull Request Description
+          target: <target_branch>  # Replace with your desired target branch
