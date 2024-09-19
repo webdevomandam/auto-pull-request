@@ -1,4 +1,4 @@
-name: Create PR for new commits
+name: Create Pull Request
 
 on:
   push:
@@ -6,9 +6,23 @@ on:
       - main
 
 jobs:
-  comment:
+  create-pull-request:
     runs-on: ubuntu-latest
+
     steps:
-      - run: gh pr create --base beta --head main --title "TITLE" --body "BODY"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js (for GitHub CLI)
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install GitHub CLI
+        run: |
+          curl -sSL https://raw.githubusercontent.com/cli/cli/trunk/script/install.sh | bash
+
+      - name: Create Pull Request
+        run: |
+          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+          gh pr create --base beta --head main --title "Auto PR from main to beta" --body "This PR is created automatically from the main branch to the beta branch."
