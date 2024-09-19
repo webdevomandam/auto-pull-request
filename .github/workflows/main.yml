@@ -1,4 +1,4 @@
-name: Create PR from main to beta
+name: Create Pull Request
 
 on:
   push:
@@ -6,9 +6,18 @@ on:
       - main
 
 jobs:
-  create-pr-to-beta:
+  create-pull-request:
     runs-on: ubuntu-latest
     steps:
-      - run: gh pr create --base beta --head main --title "Update beta branch with latest changes from main" --body "This PR includes the latest changes from the main branch."
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/github-cli-archive-keyring.gpg | sudo -E apt-key add -
+          sudo apt-add-repository https://cli.github.com/packages/github-cli-archive-keyring.gpg
+          sudo apt update
+          sudo apt install gh
+
+      - name: Create Pull Request
+        run: |
+          gh pr create --title "New changes from main" --body "This pull request contains the latest changes from the main branch." --head main --base beta
