@@ -1,4 +1,4 @@
-name: Create Pull Request
+name: Create PR for new commits
 
 on:
   push:
@@ -6,18 +6,33 @@ on:
       - main
 
 jobs:
-  create-pull-request:
+  create-pr:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-      - name: Install GitHub CLI
+      - name: Setup GitHub CLI
+        uses: cli/cli@v2
+
+      - name: Check for new commits
+        id: check_commits
         run: |
-          curl -fsSL https://cli.github.com/packages/github-cli-archive-keyring.gpg | sudo -E apt-key add -
-          sudo apt-add-repository https://cli.github.com/packages/github-cli-archive-keyring.gpg
-          sudo apt update
-          sudo apt install gh
+          git fetch origin main beta
+          DIFF=$(git rev-list --count beta..main)
+          if [ $DIFF -gt 0 ]; then
+            echo "NEW_COMMITS=true" >> $GITHUB_OUTPUT
+          else
+            echo "NEW_COMMITS=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Pull Request
+        if: steps.check_commits.outputs.NEW_COMMITS == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr create --title "New changes from main" --body "This pull request contains the latest changes from the main branch." --head main --base beta
+          PR_TITLE="Update beta branch with new changes from main"
+          PR_BODY="This PR updates the beta branch with the latest changes from the main branch."
+          gh pr create --base beta --head main --title "$PR_TITLE" --body "$PR_BODY"
