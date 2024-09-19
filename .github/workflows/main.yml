@@ -1,38 +1,13 @@
-name: Create PR for new commits
-
+name: Comment when opened
 on:
-  push:
-    branches:
-      - main
-
+  issues:
+    types:
+      - opened
 jobs:
-  create-pr:
+  comment:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Setup GitHub CLI
-        uses: cli/cli@v2
-
-      - name: Check for new commits
-        id: check_commits
-        run: |
-          git fetch origin main beta
-          DIFF=$(git rev-list --count beta..main)
-          if [ $DIFF -gt 0 ]; then
-            echo "NEW_COMMITS=true" >> $GITHUB_OUTPUT
-          else
-            echo "NEW_COMMITS=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Pull Request
-        if: steps.check_commits.outputs.NEW_COMMITS == 'true'
+      - run: gh issue comment $ISSUE --body "Thank you for opening this issue!"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_TITLE="Update beta branch with new changes from main"
-          PR_BODY="This PR updates the beta branch with the latest changes from the main branch."
-          gh pr create --base beta --head main --title "$PR_TITLE" --body "$PR_BODY"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.html_url }}
