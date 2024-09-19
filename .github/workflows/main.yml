@@ -9,30 +9,7 @@ jobs:
   create_pull_request:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Setup GitHub CLI
-        uses: cli/setup-gh@v1
-
-      - name: Check for changes
-        id: check_changes
-        run: |
-          git fetch origin main
-          CHANGES=$(git log --oneline origin/main..HEAD)
-          if [ -n "$CHANGES" ]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Pull Request
-        if: steps.check_changes.outputs.changes == 'true'
+      - name: Create pull request
+        run: gh pr create -B base_branch -H branch_to_merge --title 'Merge branch_to_merge into base_branch' --body 'Created by Github action'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git checkout -b $BRANCH_NAME
-          git push -u origin $BRANCH_NAME
-          gh pr create --title "Automated PR from main" --body "This is an automated pull request created from changes in the main branch." --base main --head beta
