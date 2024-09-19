@@ -1,4 +1,4 @@
-name: Auto PR from main to beta
+name: Create PR from main to beta
 
 on:
   push:
@@ -6,25 +6,36 @@ on:
       - main
 
 jobs:
-  create-pull-request:
+  create_pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
+      - name: Setup GitHub CLI
+        uses: cli/cli@v2
+
+      - name: Check for new commits
+        id: check_commits
+        run: |
+          git fetch origin beta
+          NEW_COMMITS=$(git log beta..main --oneline)
+          if [ -n "$NEW_COMMITS" ]; then
+            echo "new_commits=true" >> $GITHUB_OUTPUT
+          else
+            echo "new_commits=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: beta
-          base: main
-          title: 'Update beta branch with latest changes from main'
-          body: |
-            This PR is automatically created to merge the latest changes from the main branch into the beta branch.
-            
-            Please review and merge as appropriate.
-          labels: |
-            automated-pr
-            beta-update
+        if: steps.check_commits.outputs.new_commits == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_EXISTS=$(gh pr list --base beta --head main --json number --jq length)
+          if [ "$PR_EXISTS" -eq "0" ]; then
+            gh pr create --base beta --head main --title "Update beta branch with latest changes from main" --body "This PR includes the latest changes from the main branch."
+          else
+            echo "A pull request from main to beta already exists. Skipping PR creation."
+          fi
