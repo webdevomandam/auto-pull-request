@@ -1,20 +1,30 @@
-name: Create production promotion pull request
+name: Auto PR from main to beta
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  productionPromotion:
+  create-pull-request:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
         with:
-          ref: production
-      - name: Reset promotion branch
-        run: |
-          git fetch origin main:main
-          git reset --hard main
+          fetch-depth: 0
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v5
         with:
-          branch: production-promotion
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: beta
+          base: beta
+          title: 'Update beta branch with latest changes from main'
+          body: |
+            This PR is automatically created to merge the latest changes from the main branch into the beta branch.
+            
+            Please review and merge as appropriate.
+          labels: |
+            automated-pr
+            beta-update
