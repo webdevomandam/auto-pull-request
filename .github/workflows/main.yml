@@ -1,7 +1,7 @@
 name: Create Pull Request
 on:
   push:
-    branches: beta
+    branches: main
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,7 +10,7 @@ jobs:
       - name: Create Pull Request
         uses: actions/create-pull-request@v4
         with:
-          head: your_branch_name
-          base: main
+          head: main
+          base: beta
           title: Your Pull Request Title
           body: Your Pull Request Description
