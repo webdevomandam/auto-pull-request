@@ -2,7 +2,7 @@ name: Create Pull Request
 on:
   push:
     branches:
-      - main
+      - ${{ secrets.PRODUCTION_BRANCH }}
 jobs:
   comment:
     runs-on: ubuntu-latest
