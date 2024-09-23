@@ -2,13 +2,13 @@ name: Create Pull Request
 on:
   push:
     branches:
-      - beta
+      - main
 jobs:
   comment:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - run: gh pr create --base main --head beta --title "Auto PR from beta to main" --body "This PR is created automatically from the beta branch to the main branch."
+      - run: gh pr create --base beta --head main --title "Auto PR from main to beta" --body "This PR is created automatically from the main branch to the beta branch."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
