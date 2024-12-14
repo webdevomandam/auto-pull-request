@@ -1,0 +1,47 @@
+name: Create Slack Channel on Branch Creation
+
+on:
+  create:
+    branches:
+      - "feature/*"
+
+jobs:
+  create-slack-channel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Extract branch name
+        id: get-branch-name
+        run: |
+          echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Create Slack Channel
+        env:
+          SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
+          BRANCH_NAME: ${{ env.branch_name }}
+        run: |
+          curl -X POST https://slack.com/api/conversations.create \
+            -H "Authorization: Bearer $SLACK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "${BRANCH_NAME}"}'
+
+      - name: Notify Slack Channel Creation Status
+        env:
+          SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
+          BRANCH_NAME: ${{ env.branch_name }}
+        run: |
+          RESPONSE=$(curl -s -X POST https://slack.com/api/conversations.create \
+            -H "Authorization: Bearer $SLACK_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "${BRANCH_NAME}"}')
+
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "Slack channel '${BRANCH_NAME}' created successfully."
+          else
+            echo "Failed to create Slack channel '${BRANCH_NAME}'."
+            echo "$RESPONSE"
+            exit 1
+          fi
